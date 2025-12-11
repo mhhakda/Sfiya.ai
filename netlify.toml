@@ -1,6 +1,16 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  functions = ""     # <-- disables auto function folder
 
 [build.environment]
   NODE_VERSION = "18.18.0"
+
+[functions]
+  directory = ""     # <-- forces no functions folder
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[plugins.inputs]
+  disableNeon = true # <-- stops Neon extension from loading
