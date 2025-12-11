@@ -472,4 +472,3 @@ export async function getPlatformStatsHandler(req: Request, res: Response) {
   }
 }
 
-export { adminMiddleware };
