@@ -4,7 +4,7 @@
   functions = ""     # <-- disables auto function folder
 
 [build.environment]
-  NODE_VERSION = "18.18.0"
+  NODE_VERSION = "18.20.0"
 
 [functions]
   directory = ""     # <-- forces no functions folder
