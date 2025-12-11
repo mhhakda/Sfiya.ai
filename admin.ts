@@ -32,7 +32,7 @@ export async function adminMiddleware(
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     if (decoded.role !== "admin") {
-      return res.status(403).json({ error: "Admin access required" });
+      res.status(403).json({ error: "Admin access required" });
       return;
     }
 
@@ -133,7 +133,7 @@ export async function updateUserStatusHandler(req: Request, res: Response) {
     const { status } = req.body;
 
     if (!["active", "inactive", "banned", "suspended"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+       res.status(400).json({ error: "Invalid status" });
       return;
     }
 
