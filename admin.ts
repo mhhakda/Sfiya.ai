@@ -146,15 +146,21 @@ export async function updateUserStatusHandler(req: Request, res: Response) {
 
     if (error) throw error;
 
-    // Log admin action
-    await supabase.from("admin_actions").insert([
-      {
-        admin_id: req.user.user_id,
-        action_type: "user_status_updated",
-        target_user_id: user_id,
-        description: `User status changed to ${status}`,
-      },
-    ]);
+    // Log admin action (safe)
+if (!req.user || !req.user.user_id) {
+  return res.status(401).json({
+    error: "Unauthorized: admin user not found",
+  });
+}
+
+await supabase.from("admin_actions").insert([
+  {
+    admin_id: req.user.user_id,
+    action_type: "user_status_updated",
+    target_user_id: user_id,
+    description: `User status changed to ${status}`,
+  },
+]);
 
     res.json({
       success: true,
