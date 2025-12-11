@@ -123,57 +123,65 @@ export async function getUserDetailsHandler(req: Request, res: Response) {
   }
 }
 
-// ============================================
-// UPDATE USER STATUS (Admin)
-// ============================================
-
-export async function updateUserStatusHandler(req: Request, res: Response) {
+// Replace existing updateUserStatusHandler with this safe version
+export async function updateUserStatusHandler(req: Request, res: Response): Promise<Response> {
   try {
-    const { user_id } = req.params;
-    const { status } = req.body;
+    const { user_id } = req.params ?? {};
+    const { status } = req.body ?? {};
 
-    if (!["active", "inactive", "banned", "suspended"].includes(status)) {
-       res.status(400).json({ error: "Invalid status" });
-      return;
+    // Basic validation
+    if (!user_id) {
+      return res.status(400).json({ error: "Missing user_id parameter" });
+    }
+    if (typeof status === "undefined") {
+      return res.status(400).json({ error: "Missing status in request body" });
     }
 
-    const { data: user, error } = await supabase
+    // Auth guard
+    if (!req.user || !req.user.user_id) {
+      return res.status(401).json({ error: "Unauthorized: admin user not found" });
+    }
+
+    // Update user in DB
+    const { data: updatedUser, error: updateError } = await supabase
       .from("users")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status })
       .eq("id", user_id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateError) {
+      console.error("Supabase update error:", updateError);
+      return res.status(500).json({ error: updateError.message || "Failed to update user status" });
+    }
 
     // Log admin action (safe)
-if (!req.user || !req.user.user_id) {
-  return res.status(401).json({
-    error: "Unauthorized: admin user not found",
-  });
-}
+    const { error: logError } = await supabase.from("admin_actions").insert([
+      {
+        admin_id: req.user.user_id,
+        action_type: "user_status_updated",
+        target_user_id: user_id,
+        description: `User status changed to ${status}`,
+      },
+    ]);
 
-await supabase.from("admin_actions").insert([
-  {
-    admin_id: req.user.user_id,
-    action_type: "user_status_updated",
-    target_user_id: user_id,
-    description: `User status changed to ${status}`,
-  },
-]);
+    if (logError) {
+      console.error("Supabase admin_actions insert error:", logError);
+      // still return success for the update but inform about logging failure
+      return res.status(200).json({
+        success: true,
+        user: updatedUser ?? null,
+        warning: "User updated but failed to log admin action",
+      });
+    }
 
-    res.json({
-      success: true,
-      message: `User status updated to ${status}`,
-      user,
-    });
-  } catch (error) {
-    console.error("Update user status error:", error);
-    res.status(500).json({ error: "Failed to update user status" });
-    return;
+    // Success
+    return res.status(200).json({ success: true, user: updatedUser ?? null });
+  } catch (err) {
+    console.error("updateUserStatusHandler unexpected error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
-
 // ============================================
 // BAN USER (Admin)
 // ============================================
