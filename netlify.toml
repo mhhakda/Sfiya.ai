@@ -11,6 +11,3 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[plugins.inputs]
-  disableNeon = true # <-- stops Neon extension from loading
