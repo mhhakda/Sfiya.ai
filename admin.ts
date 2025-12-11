@@ -20,24 +20,28 @@ export async function adminMiddleware(
   req: Request & { user?: any },
   res: Response,
   next: any
-) {
+): Promise<void> {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
 
     if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+       res.status(401).json({ error: "No token provided" });
+      return;
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     if (decoded.role !== "admin") {
       return res.status(403).json({ error: "Admin access required" });
+      return;
     }
 
     req.user = decoded;
     next();
+    return;
   } catch (error) {
     res.status(401).json({ error: "Invalid token" });
+    return;
   }
 }
 
@@ -80,6 +84,7 @@ export async function getAllUsersHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get users error:", error);
     res.status(500).json({ error: "Failed to fetch users" });
+    return;
   }
 }
 
@@ -114,6 +119,7 @@ export async function getUserDetailsHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get user details error:", error);
     res.status(500).json({ error: "Failed to fetch user" });
+    return;
   }
 }
 
@@ -128,6 +134,7 @@ export async function updateUserStatusHandler(req: Request, res: Response) {
 
     if (!["active", "inactive", "banned", "suspended"].includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
+      return;
     }
 
     const { data: user, error } = await supabase
@@ -157,6 +164,7 @@ export async function updateUserStatusHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Update user status error:", error);
     res.status(500).json({ error: "Failed to update user status" });
+    return;
   }
 }
 
@@ -207,6 +215,7 @@ export async function banUserHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Ban user error:", error);
     res.status(500).json({ error: "Failed to ban user" });
+    return;
   }
 }
 
@@ -260,6 +269,7 @@ export async function getSubscriptionStatsHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get subscription stats error:", error);
     res.status(500).json({ error: "Failed to fetch stats" });
+    return;
   }
 }
 
@@ -315,6 +325,7 @@ export async function getRevenueHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get revenue error:", error);
     res.status(500).json({ error: "Failed to fetch revenue" });
+    return;
   }
 }
 
@@ -358,6 +369,7 @@ export async function updatePlanHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Update plan error:", error);
     res.status(500).json({ error: "Failed to update plan" });
+    return;
   }
 }
 
@@ -398,6 +410,7 @@ export async function getAIUsageHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get AI usage error:", error);
     res.status(500).json({ error: "Failed to fetch AI usage" });
+    return;
   }
 }
 
@@ -430,6 +443,7 @@ export async function getAdminLogsHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get admin logs error:", error);
     res.status(500).json({ error: "Failed to fetch logs" });
+    return;
   }
 }
 
@@ -469,6 +483,8 @@ export async function getPlatformStatsHandler(req: Request, res: Response) {
   } catch (error) {
     console.error("Get platform stats error:", error);
     res.status(500).json({ error: "Failed to fetch platform stats" });
+    return;
   }
+    next();
+  return;
 }
-
